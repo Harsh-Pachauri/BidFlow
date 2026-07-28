@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BUYER
+  SUPPLIER
+}
+
+enum TriggerType {
+  ANY_BID
+  ANY_RANK_CHANGE
+  L1_CHANGE_ONLY
+}
+
+enum EventType {
+  BID_SUBMITTED
+  EXTENDED
+  CLOSED
+  FORCE_CLOSED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  rfqsCreated  Rfq[]    @relation("RfqCreator")
+  bids         Bid[]
+}
+
+// bidCloseAt <= forcedCloseAt is enforced as a DB CHECK constraint added via
+// a follow-up migration (see docs/DATABASE_SCHEMA.md "Validation Rules") —
+// Prisma's schema language doesn't model table-level CHECK constraints
+// consistently across versions, so it's added as hand-written SQL instead
+// of relied on here.
+model Rfq {
+  id               Int            @id @default(autoincrement())
+  referenceId      String         @unique
+  pickupDate       DateTime
+  bidStartAt       DateTime
+  bidCloseAt       DateTime
+  forcedCloseAt    DateTime
+  triggerWindowMin Int
+  extensionMin     Int
+  triggerType      TriggerType
+  createdById      Int
+  createdBy        User           @relation("RfqCreator", fields: [createdById], references: [id])
+  createdAt        DateTime       @default(now())
+
+  bids             Bid[]
+  events           AuctionEvent[]
+
+  @@index([bidCloseAt])
+}
+
+model Bid {
+  id                Int      @id @default(autoincrement())
+  rfqId             Int
+  rfq               Rfq      @relation(fields: [rfqId], references: [id])
+  supplierId        Int
+  supplier          User     @relation(fields: [supplierId], references: [id])
+  carrierName       String
+  freightCharge     Decimal  @db.Decimal(12, 2)
+  originCharge      Decimal  @db.Decimal(12, 2)
+  destinationCharge Decimal  @db.Decimal(12, 2)
+  totalAmount       Decimal  @db.Decimal(12, 2)
+  transitTime       String
+  quoteValidityDays Int
+  submittedAt       DateTime @default(now())
+
+  events            AuctionEvent[]
+
+  @@index([rfqId, supplierId, submittedAt])
+  @@index([rfqId, totalAmount])
+}
+
+model AuctionEvent {
+  id        Int       @id @default(autoincrement())
+  rfqId     Int
+  rfq       Rfq       @relation(fields: [rfqId], references: [id])
+  type      EventType
+  bidId     Int?
+  bid       Bid?      @relation(fields: [bidId], references: [id])
+  reason    String
+  createdAt DateTime  @default(now())
+
+  @@index([rfqId, createdAt])
+}
