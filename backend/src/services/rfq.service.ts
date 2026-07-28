@@ -53,7 +53,7 @@ export async function listRfqs() {
 // as one table -- each supplier's active bid, ranked -- not a separate full
 // bid history alongside it. Full history (including superseded bids) is
 // what the activity log is for; duplicating it here would show most of the
-// same information twice. See INTERVIEW_NOTES.md #17.
+// same information twice. See ARCHITECTURE_DECISIONS.md #17.
 export async function getRfqDetail(rfqId: number) {
   const rfq = await prisma.rfq.findUnique({
     where: { id: rfqId },

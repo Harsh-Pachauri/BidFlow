@@ -313,7 +313,7 @@ checks in Section 3/4 separate from basic shape validation.
 
 ## 8. Auth Layering
 
-Already decided and logged in `INTERVIEW_NOTES.md` (#3, #4): JWT access
+Already decided and logged in `ARCHITECTURE_DECISIONS.md` (#3, #4): JWT access
 token, no refresh, `localStorage` + `Authorization: Bearer`, passed to
 Socket.io via the handshake `auth` payload. Mechanically:
 
@@ -332,7 +332,7 @@ Socket.io via the handshake `auth` payload. Mechanically:
 ```
 GoComet/
   README.md
-  INTERVIEW_NOTES.md
+  ARCHITECTURE_DECISIONS.md
   docs/
     HLD.md
     DATABASE_SCHEMA.md

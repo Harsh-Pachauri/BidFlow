@@ -26,7 +26,7 @@ coincidental — they exist only to make demo bids readable.)
 ## RFQs
 
 Deliberately covers every status the system can produce, including the
-internal-only `Scheduled` state discussed in `INTERVIEW_NOTES.md` #16:
+internal-only `Scheduled` state discussed in `ARCHITECTURE_DECISIONS.md` #16:
 
 | Reference | Status | What it demonstrates |
 |---|---|---|

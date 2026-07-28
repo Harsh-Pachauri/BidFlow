@@ -17,7 +17,7 @@ export interface SubmitBidInput {
   quoteValidityDays: number;
 }
 
-// The one deliberate exception to "Prisma everywhere" (see INTERVIEW_NOTES.md
+// The one deliberate exception to "Prisma everywhere" (see ARCHITECTURE_DECISIONS.md
 // #8): SELECT ... FOR UPDATE has no first-class Prisma equivalent, so this
 // transaction drops to a raw query for the lock, then plain Prisma calls for
 // everything else inside the same transaction.

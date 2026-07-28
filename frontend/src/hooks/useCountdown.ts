@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 // Client and server share a clock in local dev, so this deliberately skips
 // server-time-offset correction -- not a scenario that can happen here. See
-// INTERVIEW_NOTES.md for the trade-off if this ever ran across hosts.
+// ARCHITECTURE_DECISIONS.md for the trade-off if this ever ran across hosts.
 export function useCountdown(targetIso: string): number {
   const [remainingMs, setRemainingMs] = useState(() => new Date(targetIso).getTime() - Date.now());
 

@@ -6,7 +6,7 @@ import { serializeBid } from "../lib/serializers";
 // award action, no new column. An RFQ is awarded the instant it's
 // Closed/Force Closed and has at least one bid: the L1 (lowest) bidder at
 // that moment *is* the award, derived the same way status and ranking
-// already are everywhere else in this app. See INTERVIEW_NOTES.md #20.
+// already are everywhere else in this app. See ARCHITECTURE_DECISIONS.md #20.
 const CONCLUDED: AuctionStatus[] = ["CLOSED", "FORCE_CLOSED"];
 
 interface RfqSummary {

@@ -22,7 +22,7 @@ Built for the GoComet Full Stack Intern take-home assignment.
   ER diagram, validation rules
 - [`docs/SEED_DATA.md`](docs/SEED_DATA.md) — seeded users, passwords, and
   which RFQ demonstrates which auction state
-- [`INTERVIEW_NOTES.md`](INTERVIEW_NOTES.md) — every non-obvious design
+- [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) — every non-obvious design
   decision, with rationale, alternatives considered, and trade-offs
 
 ## Getting Started
@@ -74,7 +74,7 @@ Postgres provides natively.
 user/RFQ CRUD, read queries. One deliberate exception: the bid-placement
 transaction drops to a raw `SELECT ... FOR UPDATE` inside a Prisma
 interactive transaction, since Prisma's query builder has no first-class
-row-locking syntax. Full reasoning in `INTERVIEW_NOTES.md` #8.
+row-locking syntax. Full reasoning in `ARCHITECTURE_DECISIONS.md` #8.
 
 **Socket.io.** Live countdowns, bid updates, ranking changes, and auction
 extensions all need to reach connected clients without polling. Room
@@ -108,4 +108,4 @@ suppliers each — splitting this into separate services would add
 deployment and coordination overhead with no corresponding benefit.
 
 Full reasoning, alternatives considered, and trade-offs for every decision
-above are logged in [`INTERVIEW_NOTES.md`](INTERVIEW_NOTES.md).
+above are logged in [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md).

@@ -8,7 +8,7 @@ const FORCE_CLOSED_REASON = "Auction reached its Forced Close Time — bidding c
 
 // Guarded by "does a terminal event already exist," not a status flag, so a
 // missed tick, an overlapping run, or a server restart mid-scan is all
-// harmless -- see INTERVIEW_NOTES.md #10/#11.
+// harmless -- see ARCHITECTURE_DECISIONS.md #10/#11.
 async function closeRfqIfDue(rfqId: number): Promise<void> {
   const result = await prisma.$transaction(async (tx) => {
     const rows = await tx.$queryRaw<Rfq[]>`SELECT * FROM "Rfq" WHERE id = ${rfqId} FOR UPDATE`;
