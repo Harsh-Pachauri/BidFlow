@@ -43,39 +43,51 @@ const INITIAL_BIDS: Bid[] = [
 const SNIPE_BID: Bid = { rank: 1, supplier: "Anchor Freight Co.", amount: 18180 };
 const CYCLE_START = 14; // seconds shown at the top of each loop
 const TRIGGER_WINDOW = 5; // extension fires if a bid lands at or below this
+const MAX_ROWS = 3; // hard cap — the ladder only ever shows top 3, no matter what
 
 function formatUSD(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
 
 /** Live-simulated bid ladder: countdown runs down, a challenger snipes near
- *  zero, the clock visibly extends. This is the product's core mechanic,
- *  dramatized rather than described. */
+ *  zero, the clock visibly extends, then the cycle resets. Capped to
+ *  MAX_ROWS so the list can never grow past the top 3 — a fresh cycle
+ *  always replaces state wholesale rather than appending to it. */
 function BidLadder() {
   const [seconds, setSeconds] = useState(CYCLE_START);
-  const [bids, setBids] = useState(INITIAL_BIDS);
+  const [bids, setBids] = useState<Bid[]>(INITIAL_BIDS);
   const [extended, setExtended] = useState(false);
   const hasSniped = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const tick = setInterval(() => {
+    // guard against a duplicate interval (e.g. StrictMode double-invoke)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
       setSeconds((s) => {
         if (!hasSniped.current && s === TRIGGER_WINDOW) {
           hasSniped.current = true;
-          setBids([SNIPE_BID, { ...INITIAL_BIDS[0], rank: 2 }, { ...INITIAL_BIDS[1], rank: 3 }]);
+          setBids(([SNIPE_BID, { ...INITIAL_BIDS[0], rank: 2 }, { ...INITIAL_BIDS[1], rank: 3 }] as Bid[]).slice(0, MAX_ROWS));
           setExtended(true);
           return CYCLE_START;
         }
         if (s <= 1) {
           hasSniped.current = false;
           setExtended(false);
-          setBids(INITIAL_BIDS);
+          setBids(INITIAL_BIDS.slice(0, MAX_ROWS));
           return CYCLE_START;
         }
         return s - 1;
       });
     }, 1000);
-    return () => clearInterval(tick);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
   }, []);
 
   const low = seconds <= TRIGGER_WINDOW;
@@ -106,9 +118,9 @@ function BidLadder() {
       </div>
 
       <ul className="divide-y divide-slate-100">
-        {bids.map((bid) => (
+        {bids.slice(0, MAX_ROWS).map((bid) => (
           <li
-            key={bid.supplier}
+            key={bid.rank}
             className="flex items-center justify-between px-5 py-3 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -241,4 +253,3 @@ export function LandingPage() {
     </div>
   );
 }
-

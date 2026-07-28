@@ -211,6 +211,6 @@ oversights:
   an absolute date, since the source doc doesn't specify units.
 - **Integer, not UUID, primary keys.** IDs appear in URLs (`/rfqs/1`), but
   there's no enumeration risk worth guarding against here — every RFQ and
-  bid is already visible to every authenticated user by design (open
-  bidding, see Interview Notes #9), so hiding sequential IDs would add
-  friction without protecting anything.
+  bid is already visible to every authenticated user by design (open,
+  transparent bidding is the point of the auction model), so hiding
+  sequential IDs would add friction without protecting anything.

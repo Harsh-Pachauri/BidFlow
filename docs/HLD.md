@@ -43,6 +43,13 @@ flowchart LR
     Ticker --> DB
     Ticker -- "emits on close/force-close" --> SocketServer
     REST -- "emits on bid/extend" --> SocketServer
+
+    classDef client fill:#eef4ff,stroke:#0054ff,stroke-width:1px,color:#0f337d
+    classDef server fill:#ffffff,stroke:#64748b,stroke-width:1px,color:#1e293b
+    classDef db fill:#0054ff,stroke:#0041cc,stroke-width:1px,color:#ffffff
+    class UI,SocketClient client
+    class REST,SocketServer,Ticker,Auth server
+    class DB db
 ```
 
 All application state lives in Postgres. The server process holds nothing
@@ -55,8 +62,8 @@ loses nothing.
 
 Three pure functions drive all auction behavior. "Pure" here is load-bearing,
 not a buzzword: none of them touch the DB, the clock (except by taking `now`
-as an argument), or Socket.io — which is what makes them unit-testable in
-isolation and the single most interview-defensible part of the codebase.
+as an argument), or Socket.io — which is what makes them fully unit-testable
+in isolation, independent of the database or the HTTP layer.
 
 ### 3.1 `computeStatus(rfq, now)`
 
@@ -226,9 +233,7 @@ a Prisma **interactive transaction** (`prisma.$transaction(async (tx) => {
 ... })`) with one `tx.$queryRaw` call for the row lock, then plain Prisma
 calls (`tx.bid.create`, `tx.rfq.update`) for everything else inside that
 same transaction. Prisma's query builder has no first-class row-locking
-syntax, so this is the one deliberate exception to "Prisma everywhere" —
-see Interview Notes #8 for the full reasoning and the atomicity-vs-isolation
-distinction it's answering.
+syntax, so this is the one deliberate exception to "Prisma everywhere."
 
 ## 5. Auction Ticker — closing auctions nobody is actively bidding on
 
@@ -301,7 +306,7 @@ auction is currently open (that's always `computeStatus()`, called fresh).
 Deliberately not included: PUT/DELETE on RFQs or bids (never requested, and
 an append-only/immutable-once-created model has no use for them), a
 per-buyer "my RFQs" filter (every RFQ is visible to every authenticated
-user by design — see Interview Notes #9), and a separate API-docs file for
+user by design), and a separate API-docs file for
 now — this table is complete enough at design time; a dedicated docs page
 with real example payloads makes more sense once the routes exist and stop
 moving.
@@ -313,9 +318,8 @@ checks in Section 3/4 separate from basic shape validation.
 
 ## 8. Auth Layering
 
-Already decided and logged in `ARCHITECTURE_DECISIONS.md` (#3, #4): JWT access
-token, no refresh, `localStorage` + `Authorization: Bearer`, passed to
-Socket.io via the handshake `auth` payload. Mechanically:
+JWT access token, no refresh, `localStorage` + `Authorization: Bearer`,
+passed to Socket.io via the handshake `auth` payload. Mechanically:
 
 - `authenticate` middleware verifies the JWT and attaches `req.user =
   { id, role }`.
@@ -327,12 +331,81 @@ Socket.io via the handshake `auth` payload. Mechanically:
   logic": there's no interface to design for it, just a boundary nothing
   crosses.
 
-## 9. Folder Structure
+## 9. Frontend Architecture
+
+The backend sections above are where the actual complexity lives. The
+frontend is deliberately plain — standard React patterns, nothing beyond
+what's already in the stack list.
+
+### 9.1 Routing
+
+```mermaid
+flowchart TD
+    Root(["/ — Landing (public)"])
+    Login(["/login (public)"])
+    Guard{{"ProtectedRoute<br/>any authenticated user"}}
+    Shell["AppShell<br/>sidebar + mobile topbar"]
+    Dashboard["/dashboard<br/>Auction Listing"]
+    Details["/rfqs/:id<br/>Auction Details"]
+    BuyerGuard{{"ProtectedRoute<br/>role = BUYER"}}
+    Create["/rfqs/new<br/>Create RFQ"]
+
+    Root -. already logged in .-> Dashboard
+    Login -. already logged in .-> Dashboard
+    Guard --> Shell
+    Shell --> Dashboard
+    Shell --> Details
+    Shell --> BuyerGuard
+    BuyerGuard --> Create
+
+    classDef pub fill:#ffffff,stroke:#94a3b8,stroke-width:1px,color:#334155
+    classDef guard fill:#fff7ed,stroke:#d97706,stroke-width:1px,color:#7c2d12
+    classDef page fill:#eef4ff,stroke:#0054ff,stroke-width:1px,color:#0f337d
+    class Root,Login pub
+    class Guard,BuyerGuard guard
+    class Shell,Dashboard,Details,Create page
+```
+
+Two nested guards, not one — the outer checks "is anyone logged in," the
+inner checks "is this specifically a buyer." Each layer has exactly one
+job. A supplier hitting `/rfqs/new` directly is redirected away before the
+page ever renders, mirroring the same rule the backend enforces
+independently at the API layer (§7) — the frontend guard is a UX
+convenience, not the actual security boundary; that's `authorize("BUYER")`
+in Express, tested on its own terms.
+
+### 9.2 State management
+
+- **Auth** — React Context (`AuthContext`), since it's genuinely
+  cross-cutting and changes rarely (login/logout).
+- **Everything else** — plain `useState`/`useEffect` plus two small custom
+  hooks, `useSocketRoom` and `useSocketEvent`. No Redux, no React Query:
+  with Socket.io already pushing fresh data on every change, a caching
+  library would be solving a "keep this fresh" problem that doesn't exist
+  here.
+
+### 9.3 Design system
+
+A dozen hand-rolled Tailwind primitives (`Button`, `Input`, `Card`,
+`Badge`, `Table`, `Dialog`, `Toast`, `Logo`, …) under `components/ui/`,
+not a component library. At this scale a library's own conventions would
+add more surface area than the primitives themselves save — each one here
+is a small, self-contained file with a single, obvious responsibility.
+
+### 9.4 AppShell
+
+A persistent sidebar on desktop; on mobile, a `hidden`/`flex` class toggle
+driven by one boolean, not a CSS transform. An earlier transform-based
+version (`-translate-x-full` → `translate-x-0`) silently failed: Tailwind
+v4 implements `translate-x-*` via the native CSS `translate` property, and
+an undefined `--tw-translate-y` invalidated the whole declaration with no
+warning.
+
+## 10. Folder Structure
 
 ```
 GoComet/
   README.md
-  ARCHITECTURE_DECISIONS.md
   docs/
     HLD.md
     DATABASE_SCHEMA.md
@@ -383,7 +456,7 @@ GoComet/
         ui/                    <- generic design-system primitives
           Button.tsx, Input.tsx, Select.tsx, FormField.tsx, Card.tsx,
           Badge.tsx, Table.tsx, Dialog.tsx, Toast.tsx, Spinner.tsx,
-          EmptyState.tsx, icons.tsx
+          EmptyState.tsx, Logo.tsx, icons.tsx
         Layout.tsx              <- AppShell: sidebar + mobile topbar
         CountdownTimer.tsx
         BidForm.tsx
@@ -417,22 +490,4 @@ a couple of natural additions (`components/ui/` for the design system,
 `lib/serializers.ts` to deduplicate a Prisma-Decimal-to-DTO mapping that
 was about to be copy-pasted into two services).
 
-## 10. Timeline
 
-Assuming ~5-6 working days, typical for this kind of intern take-home —
-tell me the actual deadline if it's different and this gets rebalanced:
-
-- **Day 1** — Schema, migrations, seed script, auth (login + JWT + middleware).
-- **Day 2** — Pure rule functions (Section 3) + unit tests. Built and proven
-  first, before anything else depends on them — this is the highest-risk
-  logic in the system.
-- **Day 3** — REST API wired to the rule functions inside the locked
-  transaction; Socket.io server + ticker.
-- **Day 4** — Frontend: login, listing page, details page (REST-only first,
-  no realtime yet).
-- **Day 5** — Frontend realtime wiring (socket hooks, live countdown, live
-  rank/bid updates) + create-RFQ form.
-- **Day 6** — Docs pass (README, verify these two docs still match what was
-  actually built, log any deviations in Interview Notes) + a manual
-  end-to-end pass across all four auction states (Scheduled, Active,
-  Closed, Force Closed).
