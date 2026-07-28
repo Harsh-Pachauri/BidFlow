@@ -13,6 +13,8 @@ const DEMO_ACCOUNTS = [
   { label: "Buyer 2", email: "buyer2@rfq-demo.com" },
   { label: "Supplier 1", email: "supplier1@rfq-demo.com" },
   { label: "Supplier 2", email: "supplier2@rfq-demo.com" },
+  { label: "Supplier 3", email: "supplier3@rfq-demo.com" },
+  { label: "Supplier 4", email: "supplier4@rfq-demo.com" },
 ];
 
 export function LoginPage() {
