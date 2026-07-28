@@ -189,41 +189,58 @@ can compute themselves as the new L1 off the same stale read.
 
 ```mermaid
 sequenceDiagram
-    participant C as Supplier (client)
-    participant API as Express route
-    participant SVC as BidService
+    participant C as Supplier
+    participant API as Express API
+    participant SVC as Bid Service
     participant DB as PostgreSQL
     participant IO as Socket.io
 
     C->>API: POST /api/rfqs/:id/bids
-    API->>SVC: submitBid(rfqId, supplierId, payload)
-    SVC->>DB: BEGIN; SELECT rfq ... FOR UPDATE
-    DB-->>SVC: rfq row (locked for this transaction)
-    SVC->>SVC: computeStatus(rfq, now)
-    alt not ACTIVE
+    API->>SVC: submitBid
+    SVC->>DB: BEGIN
+    SVC->>DB: SELECT RFQ FOR UPDATE
+    DB-->>SVC: Locked RFQ
+
+    SVC->>SVC: Compute auction status
+
+    alt Auction not active
         SVC->>DB: ROLLBACK
-        SVC-->>API: 409 Auction is not open for bidding
-    else ACTIVE
-        SVC->>DB: this supplier's latest previous bid, if any
-        SVC->>SVC: validate newTotal < previousTotal
-        alt invalid
+        SVC-->>API: 409 Auction not open
+    else Auction active
+
+        SVC->>DB: Read supplier's latest bid
+        SVC->>SVC: Validate lower bid
+
+        alt Validation failed
             SVC->>DB: ROLLBACK
-            SVC-->>API: 422 Must be lower than your previous bid
-        else valid
-            SVC->>DB: rankBefore = latest bid per supplier
-            SVC->>DB: INSERT new bid
-            SVC->>DB: rankAfter = latest bid per supplier (incl. new bid)
-            SVC->>DB: INSERT AuctionEvent(BID_SUBMITTED)
-            SVC->>SVC: evaluateExtension(rfq, rankBefore, rankAfter, now)
-            opt extension triggered
-                SVC->>DB: UPDATE rfq.bidCloseAt = newCloseTime
-                SVC->>DB: INSERT AuctionEvent(EXTENDED, reason)
+            SVC-->>API: 422 Bid must be lower
+
+        else Validation passed
+
+            SVC->>DB: Load current rankings
+            SVC->>DB: Insert bid
+            SVC->>DB: Recompute rankings
+            SVC->>DB: Log BID_SUBMITTED event
+
+            SVC->>SVC: Evaluate extension rules
+
+            opt Extension required
+                SVC->>DB: Update bid close time
+                SVC->>DB: Log EXTENDED event
             end
+
             SVC->>DB: COMMIT
-            SVC-->>API: 201 { bid, rank, newCloseTime? }
-            API-->>C: 201 response
-            SVC->>IO: emit auction:bid_placed (+ auction:extended if applicable)
-            IO-->>C: broadcast to rfq:{id} room
+
+            SVC-->>API: Return bid result
+            API-->>C: 201 Created
+
+            SVC->>IO: Broadcast bid update
+            opt Auction extended
+                SVC->>IO: Broadcast extension event
+            end
+
+            IO-->>C: Notify connected clients
+
         end
     end
 ```

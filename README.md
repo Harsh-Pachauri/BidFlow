@@ -14,6 +14,8 @@ Built for the GoComet Full Stack Intern take-home assignment.
 - **Database:** PostgreSQL
 - **Auth:** JWT, login only (see Architecture Decisions below)
 
+![alt text](image.png)
+
 ## Documentation
 
 - [`docs/HLD.md`](docs/HLD.md) — architecture, core auction logic, sequence
