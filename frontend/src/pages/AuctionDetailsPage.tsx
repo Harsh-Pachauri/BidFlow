@@ -129,6 +129,8 @@ export function AuctionDetailsPage() {
               <CountdownTimer
                 targetIso={rfq.status === "SCHEDULED" ? rfq.bidStartAt : rfq.bidCloseAt}
                 label={rfq.status === "SCHEDULED" ? "Starts in" : "Bid close in"}
+                completedLabel={rfq.status === "SCHEDULED" ? "Starting…" : "Closed"}
+                onComplete={rfq.status === "SCHEDULED" ? load : undefined}
               />
             )}
             <dl className="flex flex-col gap-1.5 text-xs">

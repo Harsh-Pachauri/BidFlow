@@ -1,13 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Client and server share a clock in local dev, so this deliberately skips
 // server-time-offset correction -- not a scenario that can happen here.
-export function useCountdown(targetIso: string): number {
+export function useCountdown(targetIso: string, onComplete?: () => void): number {
   const [remainingMs, setRemainingMs] = useState(() => new Date(targetIso).getTime() - Date.now());
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     const targetMs = new Date(targetIso).getTime();
-    const tick = () => setRemainingMs(targetMs - Date.now());
+    let fired = false;
+    const tick = () => {
+      const next = targetMs - Date.now();
+      setRemainingMs(next);
+      if (next <= 0 && !fired) {
+        fired = true;
+        onCompleteRef.current?.();
+      }
+    };
 
     tick();
     const interval = setInterval(tick, 1000);

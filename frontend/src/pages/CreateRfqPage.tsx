@@ -10,6 +10,18 @@ import { FormField } from "../components/ui/FormField";
 import { Button } from "../components/ui/Button";
 import { useToast } from "../components/ui/Toast";
 
+// The backend already computes exactly which field/rule failed (zod's
+// .flatten()), it just doesn't put it in the top-level `error` string --
+// that stays a generic "Invalid request body" for every validation
+// failure. Reading `details` here surfaces the actual reason instead.
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (!axios.isAxiosError<ApiErrorBody>(err)) return fallback;
+  const data = err.response?.data;
+  const details = data?.details as { fieldErrors?: Record<string, string[]> } | undefined;
+  const fieldMessage = details?.fieldErrors && Object.values(details.fieldErrors).flat().find(Boolean);
+  return fieldMessage ?? data?.error ?? fallback;
+}
+
 export function CreateRfqPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -42,8 +54,7 @@ export function CreateRfqPage() {
       showToast("RFQ created.", "success");
       navigate(`/rfqs/${response.data.id}`);
     } catch (err) {
-      const message = axios.isAxiosError<ApiErrorBody>(err) ? err.response?.data.error : undefined;
-      setError(message ?? "Failed to create RFQ.");
+      setError(extractErrorMessage(err, "Failed to create RFQ."));
     } finally {
       setIsSubmitting(false);
     }
