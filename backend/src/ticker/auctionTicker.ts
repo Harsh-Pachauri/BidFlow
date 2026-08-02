@@ -44,21 +44,30 @@ async function closeRfqIfDue(rfqId: number): Promise<void> {
 export function startAuctionTicker(intervalMs = 5000): NodeJS.Timeout {
   return setInterval(() => {
     void (async () => {
-      const now = new Date();
-      const dueRfqs = await prisma.rfq.findMany({
-        where: {
-          bidCloseAt: { lte: now },
-          events: { none: { type: { in: ["CLOSED", "FORCE_CLOSED"] } } },
-        },
-        select: { id: true },
-      });
+      // Top-level guard, separate from the per-RFQ one below: findMany()
+      // itself can throw (e.g. a transient DB/connection-pool outage), and
+      // an uncaught rejection here would otherwise escape this IIFE and
+      // crash the process. A failed scan just gets logged and retried on
+      // the next tick -- setInterval keeps running regardless.
+      try {
+        const now = new Date();
+        const dueRfqs = await prisma.rfq.findMany({
+          where: {
+            bidCloseAt: { lte: now },
+            events: { none: { type: { in: ["CLOSED", "FORCE_CLOSED"] } } },
+          },
+          select: { id: true },
+        });
 
-      for (const { id } of dueRfqs) {
-        try {
-          await closeRfqIfDue(id);
-        } catch (err) {
-          console.error(`Ticker failed to close RFQ ${id}:`, err);
+        for (const { id } of dueRfqs) {
+          try {
+            await closeRfqIfDue(id);
+          } catch (err) {
+            console.error(`Ticker failed to close RFQ ${id}:`, err);
+          }
         }
+      } catch (err) {
+        console.error("Ticker iteration failed:", err);
       }
     })();
   }, intervalMs);
