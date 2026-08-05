@@ -17,10 +17,6 @@ export interface SubmitBidInput {
   quoteValidityDays: number;
 }
 
-// The one deliberate exception to "Prisma everywhere": SELECT ... FOR UPDATE
-// has no first-class Prisma equivalent, so this transaction drops to a raw
-// query for the lock, then plain Prisma calls for everything else inside
-// the same transaction.
 export async function submitBid(rfqId: number, supplierId: number, input: SubmitBidInput) {
   const result = await prisma.$transaction(async (tx) => {
     const rows = await tx.$queryRaw<Rfq[]>`SELECT * FROM "Rfq" WHERE id = ${rfqId} FOR UPDATE`;
@@ -96,9 +92,6 @@ export async function submitBid(rfqId: number, supplierId: number, input: Submit
     };
   });
 
-  // Emitted after commit, not inside the transaction -- broadcasting before
-  // the write is durable would tell clients about a bid that could still
-  // roll back.
   emitBidPlaced(
     rfqId,
     { ...result.bid, label: result.rank.find((r) => r.id === result.bid.id)?.label ?? "" },

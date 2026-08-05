@@ -49,11 +49,6 @@ export async function listRfqs() {
   });
 }
 
-// "All supplier bids (sorted by price)" and "Supplier ranking" (§8) are read
-// as one table -- each supplier's active bid, ranked -- not a separate full
-// bid history alongside it. Full history (including superseded bids) is
-// what the activity log is for; duplicating it here would show most of the
-// same information twice.
 export async function getRfqDetail(rfqId: number) {
   const rfq = await prisma.rfq.findUnique({
     where: { id: rfqId },

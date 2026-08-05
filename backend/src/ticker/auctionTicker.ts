@@ -6,9 +6,6 @@ import { emitClosed } from "../sockets/emit";
 const CLOSED_REASON = "Bid close time reached with no further qualifying activity — auction closed.";
 const FORCE_CLOSED_REASON = "Auction reached its Forced Close Time — bidding closed permanently.";
 
-// Guarded by "does a terminal event already exist," not a status flag, so a
-// missed tick, an overlapping run, or a server restart mid-scan is all
-// harmless -- whichever process notices first wins, and the rest no-op.
 async function closeRfqIfDue(rfqId: number): Promise<void> {
   const result = await prisma.$transaction(async (tx) => {
     const rows = await tx.$queryRaw<Rfq[]>`SELECT * FROM "Rfq" WHERE id = ${rfqId} FOR UPDATE`;
@@ -44,11 +41,6 @@ async function closeRfqIfDue(rfqId: number): Promise<void> {
 export function startAuctionTicker(intervalMs = 5000): NodeJS.Timeout {
   return setInterval(() => {
     void (async () => {
-      // Top-level guard, separate from the per-RFQ one below: findMany()
-      // itself can throw (e.g. a transient DB/connection-pool outage), and
-      // an uncaught rejection here would otherwise escape this IIFE and
-      // crash the process. A failed scan just gets logged and retried on
-      // the next tick -- setInterval keeps running regardless.
       try {
         const now = new Date();
         const dueRfqs = await prisma.rfq.findMany({

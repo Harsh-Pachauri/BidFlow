@@ -5,8 +5,6 @@ import { setIO } from "./io";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-// Auth happens once at handshake, not per-event -- a socket that skipped
-// this would otherwise bypass every REST-layer auth check entirely.
 export function initSockets(httpServer: HttpServer) {
   const io = new Server(httpServer, {
     cors: { origin: process.env.CLIENT_URL },

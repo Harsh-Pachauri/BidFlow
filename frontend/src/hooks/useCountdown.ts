@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-// Client and server share a clock in local dev, so this deliberately skips
-// server-time-offset correction -- not a scenario that can happen here.
 export function useCountdown(targetIso: string, onComplete?: () => void): number {
   const [remainingMs, setRemainingMs] = useState(() => new Date(targetIso).getTime() - Date.now());
   const onCompleteRef = useRef(onComplete);

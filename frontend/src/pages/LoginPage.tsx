@@ -31,8 +31,6 @@ export function LoginPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Shared by the real form and the demo-account shortcuts below, so both
-  // paths get identical error handling and post-login redirect behavior.
   async function performLogin(loginEmail: string, loginPassword: string) {
     setError(null);
     setIsSubmitting(true);

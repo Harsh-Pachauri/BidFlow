@@ -37,11 +37,6 @@ model User {
   bids         Bid[]
 }
 
-// bidCloseAt <= forcedCloseAt is enforced as a DB CHECK constraint added via
-// a follow-up migration (see docs/DATABASE_SCHEMA.md "Validation Rules") —
-// Prisma's schema language doesn't model table-level CHECK constraints
-// consistently across versions, so it's added as hand-written SQL instead
-// of relied on here.
 model Rfq {
   id               Int            @id @default(autoincrement())
   referenceId      String         @unique

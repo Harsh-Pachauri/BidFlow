@@ -22,10 +22,6 @@ function bidCharges(freight: number, origin: number, destination: number) {
 async function main() {
   const now = new Date();
 
-  // TRUNCATE ... RESTART IDENTITY, not deleteMany(), so re-running `npm run
-  // seed` resets auto-increment ids too -- otherwise RFQ-2026-001 would land
-  // on a different id every reseed, which is confusing to test against and
-  // to write about in docs.
   await prisma.$executeRaw`TRUNCATE TABLE "AuctionEvent", "Bid", "Rfq", "User" RESTART IDENTITY CASCADE`;
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
@@ -43,7 +39,6 @@ async function main() {
   const kavita = await prisma.user.create({ data: { name: "Kavita Desai", email: "supplier4@rfq-demo.com", passwordHash, role: "SUPPLIER" } });
   const rahul = await prisma.user.create({ data: { name: "Rahul Kapoor", email: "supplier5@rfq-demo.com", passwordHash, role: "SUPPLIER" } });
 
-  // --- RFQ 1: Scheduled — hasn't started yet ---
   await prisma.rfq.create({
     data: {
       referenceId: "RFQ-2026-001",
@@ -58,7 +53,6 @@ async function main() {
     },
   });
 
-  // --- RFQ 2: Active, already extended twice via rank changes, still open ---
   const rfq2 = await prisma.rfq.create({
     data: {
       referenceId: "RFQ-2026-002",
@@ -105,7 +99,6 @@ async function main() {
     ],
   });
 
-  // --- RFQ 3: Active, zero bids — demonstrates the empty state ---
   await prisma.rfq.create({
     data: {
       referenceId: "RFQ-2026-003",
@@ -120,7 +113,6 @@ async function main() {
     },
   });
 
-  // --- RFQ 4: Closed naturally — never reached the forced ceiling ---
   const rfq4 = await prisma.rfq.create({
     data: {
       referenceId: "RFQ-2026-004",
@@ -157,7 +149,6 @@ async function main() {
     ],
   });
 
-  // --- RFQ 5: Force closed — extended repeatedly until it hit the ceiling ---
   const rfq5ForcedClose = minutesFromNow(now, -1 * 24 * 60);
   const rfq5 = await prisma.rfq.create({
     data: {

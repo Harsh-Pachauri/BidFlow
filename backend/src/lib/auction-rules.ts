@@ -24,9 +24,6 @@ export interface RankedBid extends RankableBid {
   label: string;
 }
 
-// A supplier's active bid is their most recent row on an RFQ; every earlier
-// one is retained as immutable history but excluded here. See
-// docs/DATABASE_SCHEMA.md for the active-vs-historical distinction.
 export function latestPerSupplier<T extends { supplierId: number; submittedAt: Date }>(bids: T[]): T[] {
   const latest = new Map<number, T>();
   for (const bid of bids) {
@@ -47,10 +44,6 @@ export function computeRanking<T extends RankableBid>(bids: T[]): (T & { label: 
     .map((bid, index) => ({ ...bid, label: `L${index + 1}` }));
 }
 
-// Compares ranked supplier-id lists position-by-position, truncated to the
-// shorter list. This means a new entrant landing above existing bidders
-// shifts their rank and counts as a change; one landing at the very bottom
-// leaves every existing position untouched and does not.
 export function rankChanged(before: RankableBid[], after: RankableBid[]): boolean {
   const n = Math.min(before.length, after.length);
   for (let i = 0; i < n; i++) {

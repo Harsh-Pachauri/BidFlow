@@ -32,10 +32,6 @@ function SidebarLink({
   );
 }
 
-// A fixed-height flex shell (sidebar + independently-scrolling content) is
-// the standard B2B SaaS pattern -- sidebar navigation never needs its own
-// scrollbar. The mobile drawer is plain CSS transform + transition off one
-// boolean, not a library: cheap to explain, nothing to animate wrong.
 export function Layout() {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);

@@ -1,9 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  // Drops the border/shadow that normally signals "this is a primary,
-  // elevated section" -- for reference-only content that should visually
-  // recede rather than compete with the cards around it.
   muted?: boolean;
 }
 

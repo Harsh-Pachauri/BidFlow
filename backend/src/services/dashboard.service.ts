@@ -2,11 +2,6 @@ import { prisma } from "../lib/prisma";
 import { computeStatus, computeRanking, latestPerSupplier, type AuctionStatus } from "../lib/auction-rules";
 import { serializeBid } from "../lib/serializers";
 
-// "Awarded" / "Won" are deliberately not stored anywhere -- there's no
-// award action, no new column. An RFQ is awarded the instant it's
-// Closed/Force Closed and has at least one bid: the L1 (lowest) bidder at
-// that moment *is* the award, derived the same way status and ranking
-// already are everywhere else in this app.
 const CONCLUDED: AuctionStatus[] = ["CLOSED", "FORCE_CLOSED"];
 
 interface RfqSummary {

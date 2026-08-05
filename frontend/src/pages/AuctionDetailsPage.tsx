@@ -52,10 +52,6 @@ export function AuctionDetailsPage() {
     load();
   }, [load]);
 
-  // The server is the single source of truth for ranking and the activity
-  // log's reason text -- these handlers refetch rather than reconstruct
-  // that logic client-side. Event payloads are still used directly for the
-  // toast copy, since that's just UI feedback, not business state.
   useSocketRoom("auction:join", "auction:leave", { rfqId });
 
   useSocketEvent<BidPlacedPayload>("auction:bid_placed", (payload) => {
@@ -119,10 +115,6 @@ export function AuctionDetailsPage() {
       </div>
 
       <div className="flex flex-col gap-6">
-        {/* The countdown is the single most time-sensitive thing on this
-            page, so it's the visual hero of the sidebar -- tinted card,
-            larger number -- with the static timestamps demoted beneath it
-            rather than competing with it at the same weight. */}
         <Card className="border-brand-200 bg-gradient-to-b from-brand-50/70 to-white">
           <CardBody className="flex flex-col gap-4">
             {(rfq.status === "ACTIVE" || rfq.status === "SCHEDULED") && (
@@ -150,9 +142,6 @@ export function AuctionDetailsPage() {
           </CardBody>
         </Card>
 
-        {/* The action a supplier actually came here to take belongs right
-            after "why should I care" (the countdown), not after the
-            reference-only config card below. */}
         {canBid && (
           <Card>
             <CardHeader>
@@ -164,9 +153,6 @@ export function AuctionDetailsPage() {
           </Card>
         )}
 
-        {/* Reference-only, rarely the first thing anyone needs -- muted
-            Card variant and a quieter, smaller heading so it visually
-            recedes instead of reading as a peer of Bids/Activity Log. */}
         <Card muted>
           <CardBody>
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">

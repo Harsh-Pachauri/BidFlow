@@ -29,10 +29,6 @@ const STATUS_LABELS: Record<AuctionStatus, string> = {
   FORCE_CLOSED: "Force Closed",
 };
 
-// "Active" is the one number that's actually actionable right now, so it
-// gets a filled hero treatment; everything else stays neutral and only
-// picks up a light tint when it's the selected filter. Three tiers, not
-// five cards all shouting at the same volume.
 function StatCard({
   label,
   count,
@@ -90,8 +86,6 @@ export function AuctionListingPage() {
 
   useSocketRoom("listing:join", "listing:leave");
 
-  // A lightweight patch, not a refetch -- the payload already carries
-  // everything this table's row needs (see docs/HLD.md §6).
   useSocketEvent<ListingUpdatedPayload>("listing:updated", (payload) => {
     setRfqs(
       (prev) =>

@@ -13,9 +13,6 @@ interface BidLike {
   submittedAt: Date;
 }
 
-// Shared by rfq.service.ts (REST detail response) and bid.service.ts (the
-// auction:bid_placed socket payload) so both render through the same
-// frontend shape instead of two slightly different ones.
 export function serializeBid(bid: BidLike) {
   return {
     id: bid.id,

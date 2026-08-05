@@ -10,10 +10,6 @@ import { FormField } from "../components/ui/FormField";
 import { Button } from "../components/ui/Button";
 import { useToast } from "../components/ui/Toast";
 
-// The backend already computes exactly which field/rule failed (zod's
-// .flatten()), it just doesn't put it in the top-level `error` string --
-// that stays a generic "Invalid request body" for every validation
-// failure. Reading `details` here surfaces the actual reason instead.
 function extractErrorMessage(err: unknown, fallback: string): string {
   if (!axios.isAxiosError<ApiErrorBody>(err)) return fallback;
   const data = err.response?.data;

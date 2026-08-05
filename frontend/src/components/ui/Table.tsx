@@ -22,9 +22,6 @@ export function TBody({ children }: { children: ReactNode }) {
   return <tbody className="divide-y divide-slate-100">{children}</tbody>;
 }
 
-// Rows with an onClick get cursor-pointer + hover automatically -- a page
-// never has to remember to add those together, and never adds cursor-pointer
-// to a row that isn't actually clickable.
 export function Tr({ children, className = "", onClick, ...props }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
@@ -46,11 +43,6 @@ export function Th({ children, className = "", ...props }: ThHTMLAttributes<HTML
 }
 
 interface TdProps extends TdHTMLAttributes<HTMLTableCellElement> {
-  // A plain className override for text color/size isn't reliable here --
-  // Tailwind's generated stylesheet order (not the order classes appear in
-  // the string) decides which same-specificity utility wins, so a caller's
-  // "text-slate-500" can silently lose to this component's own default.
-  // A prop sidesteps that instead of fighting it.
   muted?: boolean;
 }
 

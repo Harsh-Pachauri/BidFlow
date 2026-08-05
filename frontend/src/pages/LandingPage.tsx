@@ -41,18 +41,14 @@ const INITIAL_BIDS: Bid[] = [
 ];
 
 const SNIPE_BID: Bid = { rank: 1, supplier: "Anchor Freight Co.", amount: 18180 };
-const CYCLE_START = 14; // seconds shown at the top of each loop
-const TRIGGER_WINDOW = 5; // extension fires if a bid lands at or below this
-const MAX_ROWS = 3; // hard cap — the ladder only ever shows top 3, no matter what
+const CYCLE_START = 14;
+const TRIGGER_WINDOW = 5;
+const MAX_ROWS = 3;
 
 function formatUSD(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
 
-/** Live-simulated bid ladder: countdown runs down, a challenger snipes near
- *  zero, the clock visibly extends, then the cycle resets. Capped to
- *  MAX_ROWS so the list can never grow past the top 3 — a fresh cycle
- *  always replaces state wholesale rather than appending to it. */
 function BidLadder() {
   const [seconds, setSeconds] = useState(CYCLE_START);
   const [bids, setBids] = useState<Bid[]>(INITIAL_BIDS);
@@ -61,7 +57,6 @@ function BidLadder() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // guard against a duplicate interval (e.g. StrictMode double-invoke)
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
