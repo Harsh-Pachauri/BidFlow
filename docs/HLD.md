@@ -6,9 +6,9 @@ A single Node/Express backend, a single PostgreSQL database, and a single
 React SPA, connected by REST (for all mutations) and Socket.io (for
 server-initiated push). No message broker, no cache layer, no
 microservices — a single-instance monolith is the correct scale for this
-system's actual load (a handful of RFQs, a handful of suppliers each), and
-matches what GoComet's own brief explicitly asks candidates to avoid
-over-reaching for.
+system's actual load (a handful of RFQs, a handful of suppliers each),
+and there's no case here for over-reaching into infrastructure this
+system doesn't need.
 
 Everything in this system is either standard CRUD-with-forms (RFQ creation,
 login, listing pages) or the one genuinely hard problem: safely deciding,
@@ -421,7 +421,7 @@ warning.
 ## 10. Folder Structure
 
 ```
-GoComet/
+BidFlow/
   README.md
   docs/
     HLD.md

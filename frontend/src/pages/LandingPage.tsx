@@ -241,8 +241,7 @@ export function LandingPage() {
 
       <footer className="border-t border-slate-200 bg-white py-8">
         <div className="mx-auto max-w-6xl px-6 text-center text-xs text-slate-400">
-          BidFlow — a demo British Auction RFQ platform built for the GoComet Full Stack Intern
-          assignment.
+          BidFlow — a demo British Auction RFQ platform.
         </div>
       </footer>
     </div>
